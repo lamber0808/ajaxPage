@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<link rel="stylesheet" href="page.css">
+<style>
+    ul{
+        list-style: none;
+    }
+    .wrap >ul > li{
+        width: 250px;
+        height: 350px;
+        margin: 20px;
+        /*border: 1px green solid;*/
+        float: left;
+        margin-bottom: 40px;
+    }
+    .wrap >ul > li>img{
+        width: 100%;
+        height: 100%;
+    }
+    .wrap >ul > li>p{
+        text-align: center;
+        line-height: 30px;
+        height: 30px;
+    }
+    .wrap{
+        margin: 100px auto;
+        border: 1px solid red;
+        height: 1800px;
+        width: 1460px;
+    }
+</style>
+<body>
+  <div class = 'wrap'>
+       <ul class='movieList'>
+           <!--<li>-->
+               <!--<img src="" alt="">-->
+               <!--<p>电影名：惊天魔盗团</p>-->
+           <!--</li>-->
+       </ul>
+      <div class="tcdPageCode">
+      </div>
+  </div>
+</body>
+</html>
+<script src='jquery-1.11.1.js'></script>
+<script src='jquery.page.js'></script>
+<!--artTemplate模版引擎-->
+<script src='template-native.js'></script>
+<script id="temp" type="text/html">
+    {{each result as value index}}
+    <li><img src="{{value.images.large}}" alt="">
+        <p>{{value.title}}</p>
+    </li>
+    {{/each}}
+</script>
+
+<script>
+    $(function () {
+        //初始化第一页数据；
+        var urlApi = 'http://api.douban.com/v2/movie/top250',
+                current = 1, // 当前页
+                pageSize = 5; // 每页大小
+            $.ajax({
+                url:urlApi,
+                dataType:'jsonp',
+                success:function(data) {
+                    //初始化总页数；
+                     var total = parseInt(data.total/pageSize)
+                    /*翻页调用*/
+                    $(".tcdPageCode").createPage({
+                        //pageCount：总页数
+                        pageCount:total,
+                        //current：当前页
+                        current:current,
+                        backFn:function(pageIndex){
+                            //单击回调方法，pageIndex是当前页码
+                            var start = pageSize*(pageIndex-1);
+                            current = pageIndex; // 页数
+                            download(start);
+                        }
+                    });
+                }
+            })
+        // 请求第一页数据
+        download(0);
+        /*请求数据*/
+       function download  (start) {
+            // ajax 请求数据
+            $.ajax({
+                url:urlApi,
+                type:'get',
+                dataType:'jsonp',
+                data:{
+                    //从第几条开始请求；
+                    "start" : start,
+                    //请求多少条数据
+                    "count" : pageSize
+                },
+                success:function(data) {
+                    var  result = data.subjects;
+                    //使用模板引擎
+                    var html = template('temp', {result:result}); /*传进一个对象*/
+                    //展示
+                    $(".movieList").html(html);
+                }
+            })
+        }
+    })
+</script>
